@@ -1,5 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
+use bevy_editor_pls::prelude::*;
+
 mod game;
 use game::GamePlugin;
 
@@ -25,7 +27,12 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, MainMenuPlugin, GamePlugin))
+        .add_plugins((
+            DefaultPlugins,
+            MainMenuPlugin,
+            GamePlugin,
+            EditorPlugin::default(),
+        ))
         .add_state::<AppState>()
         .add_systems(Startup, spawn_camera)
         .run();

@@ -1,6 +1,7 @@
 use super::types::{Coordinates, Tile, TileType};
 use bevy::prelude::Resource;
-use noise::{NoiseFn, Perlin};
+use noise::{NoiseFn, Perlin, Worley};
+use rand::random;
 
 #[derive(Resource, Default, Debug)]
 pub struct TilemapResource {
@@ -30,15 +31,58 @@ impl TilemapResource {
         }
     }
 
-    pub fn generate_perlin_tilemap(width: usize, height: usize, scale: f64) -> TilemapResource {
-        let perlin = Perlin::new(1);
+    pub fn generate_perlin_tilemap(
+        width: usize,
+        height: usize,
+        scale: f64,
+        threshold: f64,
+    ) -> TilemapResource {
+        let perlin = Perlin::new(random());
 
         let tiles = (0..height)
             .map(|y| {
                 (0..width)
                     .map(|x| {
                         let noise_val = perlin.get([x as f64 * scale, y as f64 * scale]);
-                        let tile_type = if noise_val > 0.5 {
+                        let tile_type = if noise_val > threshold {
+                            TileType::Land
+                        } else {
+                            TileType::Water
+                        };
+
+                        Tile {
+                            tile_type,
+                            location: Coordinates { x, y },
+                        }
+                    })
+                    .collect::<Vec<Tile>>()
+            })
+            .collect::<Vec<Vec<Tile>>>();
+
+        TilemapResource {
+            width,
+            height,
+            tiles,
+        }
+    }
+
+    pub fn generate_worley_tilemap(
+        width: usize,
+        height: usize,
+        scale: f64,
+        threshold: f64,
+        seed: u32,
+        frequency_value: f64,
+    ) -> TilemapResource {
+        let worley = Worley::new(seed).set_frequency(frequency_value);
+
+        let tiles = (0..height)
+            .map(|y| {
+                (0..width)
+                    .map(|x| {
+                        let noise_val = worley.get([x as f64 * scale, y as f64 * scale]);
+                        dbg!(noise_val);
+                        let tile_type = if noise_val > threshold {
                             TileType::Land
                         } else {
                             TileType::Water

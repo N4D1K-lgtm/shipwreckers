@@ -5,7 +5,7 @@ use bevy::log;
 use bevy::prelude::*;
 
 pub fn populate_tilemap(mut tilemap: ResMut<TilemapResource>) {
-    *tilemap = TilemapResource::generate_perlin_tilemap(10, 10, 1.0);
+    *tilemap = TilemapResource::generate_worley_tilemap(50, 50, 0.1, 0.5, 20, 1.0);
     log::info!("Populated Tilemap");
 }
 

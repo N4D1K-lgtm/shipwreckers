@@ -1,0 +1,3 @@
+struct TileChunkEntity {
+    field: Type,
+}
