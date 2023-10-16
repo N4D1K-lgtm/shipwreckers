@@ -1,4 +1,4 @@
-use super::types::{Coordinates, Tile, TileType};
+use super::components::{Coordinates, Tile, TileType};
 use bevy::prelude::Resource;
 use noise::{NoiseFn, Perlin, Worley};
 use rand::random;

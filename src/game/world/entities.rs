@@ -1,3 +1,0 @@
-struct TileChunkEntity {
-    field: Type,
-}

@@ -1,18 +1,7 @@
 use bevy::prelude::*;
+
 use std::fmt::{self, Display, Formatter};
 use std::ops::{Add, Sub};
-
-#[derive(Debug)]
-pub enum TileType {
-    Land,
-    Water,
-}
-
-#[derive(Debug)]
-pub struct Tile {
-    pub tile_type: TileType,
-    pub location: Coordinates,
-}
 
 #[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Component)]
 pub struct Coordinates {
