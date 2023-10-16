@@ -1,5 +1,5 @@
 [package]
-name = "learn_bevy"
+name = "shipwreckers"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,6 +9,8 @@ edition = "2021"
 bevy = "0.11.3"
 rand = "0.8.5"
 voronoice = "0.2.0"
+noise = "0.8.0"
+bevy-inspector-egui = "0.20.0"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
