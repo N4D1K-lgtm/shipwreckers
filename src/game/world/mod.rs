@@ -2,33 +2,31 @@ use bevy::log;
 use bevy::prelude::*;
 
 mod components;
+mod events;
 mod resources;
 mod systems;
 
+use events::GenerationFinishedEvent;
 use resources::{NoiseResource, TilemapResource};
 use systems::*;
 
 pub struct WorldPlugin;
 
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub struct TilemapSystemSet;
-
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub struct DebugSystemSet;
+#[derive(States, Default, Debug, Clone, Eq, PartialEq, Hash)]
+pub enum WorldState {
+    #[default]
+    Generation,
+    Simulation,
+    Destroy,
+}
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TilemapResource>()
             .init_resource::<NoiseResource>()
-            .configure_set(PreStartup, TilemapSystemSet.before(DebugSystemSet))
-            .configure_set(PostStartup, DebugSystemSet.after(TilemapSystemSet))
-            .add_systems(
-                Startup,
-                (
-                    create_tilemap_chunks.in_set(TilemapSystemSet),
-                    print_tilemap_data.in_set(DebugSystemSet),
-                ),
-            );
+            .add_state::<WorldState>()
+            .add_systems(OnEnter(WorldState::Generation), create_tilemap_chunks)
+            .add_systems(OnEnter(WorldState::Simulation), log_tilemap_info);
         log::info!("Loaded World Plugin");
     }
 }

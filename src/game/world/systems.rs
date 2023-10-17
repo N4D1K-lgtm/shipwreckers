@@ -1,11 +1,14 @@
 use super::components::Coordinates;
 use super::components::{TileChunkComponent, TileComponent, TileType};
 use super::resources::{NoiseResource, TilemapResource};
+use super::WorldState;
+
 use bevy::log;
 use bevy::prelude::*;
 
 pub fn create_tilemap_chunks(
     mut commands: Commands,
+    mut next_state: ResMut<NextState<WorldState>>,
     tilemap: Res<TilemapResource>,
     noise: Res<NoiseResource>,
 ) {
@@ -45,36 +48,45 @@ pub fn create_tilemap_chunks(
             });
         }
     }
+    next_state.set(WorldState::Simulation);
     log::info!("Finished creating tilemap chunks");
 }
 
-pub fn print_tilemap_data(chunk_query: Query<&TileChunkComponent>) {
+pub fn log_tilemap_info(chunk_query: Query<&TileChunkComponent>) {
     let chunk_count = chunk_query.iter().count();
-    println!("Total chunks found in the query: {}", chunk_count);
+    let mut land_count = 0;
+    let mut water_count = 0;
+
+    // Gather general stats about the tilemap
     for chunk in chunk_query.iter() {
-        println!("Chunk starting at: {:?}", chunk.start_location);
         for tile in &chunk.tiles {
-            println!(
-                "Tile at global location: {:?}, chunk position: {:?}, type: {:?}",
-                tile.world_location, tile.chunk_position, tile.tile_type
-            );
+            match tile.tile_type {
+                TileType::Land => land_count += 1,
+                TileType::Water => water_count += 1,
+            }
         }
     }
-}
 
-// pub fn print_tilemap_graphic(tilemap: Option<Res<TilemapResource>>) {
-//     if let Some(map) = &tilemap {
-//         for row in &map.tiles {
-//             let row_string: String = row
-//                 .iter()
-//                 .map(|tile| match tile.tile_type {
-//                     TileType::Land => 'X',
-//                     TileType::Water => ' ',
-//                 })
-//                 .collect();
-//             println!("{}", row_string);
-//         }
-//     } else {
-//         println!("TilemapResource does not exist.");
-//     }
-// }
+    // Print header
+    log::info!("========== WORLD INFO ==========");
+    log::info!("Total chunks: {}", chunk_count);
+
+    // Using separators for better readability
+    log::info!("--------------------------");
+
+    // Tile stats
+    log::info!("Total Land Tiles: {}", land_count);
+    log::info!("Total Water Tiles: {}", water_count);
+
+    // Calculate percentages
+    let total_tiles = land_count + water_count;
+    if total_tiles > 0 {
+        let land_percentage = (land_count as f64 / total_tiles as f64) * 100.0;
+        let water_percentage = 100.0 - land_percentage;
+        log::info!("Land Percentage: {:.2}%", land_percentage);
+        log::info!("Water Percentage: {:.2}%", water_percentage);
+    }
+
+    // Closing separator
+    log::info!("===============================");
+}

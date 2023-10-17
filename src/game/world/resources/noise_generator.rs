@@ -16,9 +16,12 @@ pub struct NoiseResource {
 impl Default for NoiseResource {
     fn default() -> Self {
         Self {
-            scale: 1.0,
-            threshold: 0.5,
-            generator_type: NoiseGeneratorType::Perlin { seed: 0 },
+            scale: 0.5,     // Lower value for smoother, larger features
+            threshold: 0.3, // Higher value for more water
+            generator_type: NoiseGeneratorType::Worley {
+                seed: 1,
+                frequency: 0.5, // Lower value for smoother islands
+            },
         }
     }
 }
