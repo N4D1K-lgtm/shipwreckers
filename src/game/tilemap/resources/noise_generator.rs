@@ -1,6 +1,7 @@
 use bevy::prelude::Resource;
 use noise::{NoiseFn, Perlin, Worley};
 
+#[allow(dead_code)]
 pub enum NoiseGeneratorType {
     Perlin { seed: u32 },
     Worley { seed: u32, frequency: f64 },

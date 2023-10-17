@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
-use super::components::*;
+use crate::prelude::*;
 
 pub const PLAYER_ROTATION_SPEED: f32 = 360.0; // Degrees per second
 pub const ACCELERATION: f32 = 300.0;

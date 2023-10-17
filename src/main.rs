@@ -1,25 +1,15 @@
-use bevy::{math::Vec3Swizzles, prelude::*, utils::HashSet, window::PrimaryWindow};
-use bevy_asset_loader::prelude::*;
-use bevy_ecs_tilemap::prelude::*;
+use bevy::prelude::*;
 use bevy_editor_pls::prelude::*;
 
-mod helpers;
-
-/// Press WASD to move the camera around, and watch as chunks spawn/despawn in response.
-
-const TILE_SIZE: TilemapTileSize = TilemapTileSize { x: 64.0, y: 64.0 };
-// For this example, don't choose too large a chunk size.
-const CHUNK_SIZE: UVec2 = UVec2 { x: 8, y: 8 };
-// Render chunk sizes are set to 4 render chunks per user specified chunk.
-const RENDER_CHUNK_SIZE: UVec2 = UVec2 {
-    x: CHUNK_SIZE.x * 2,
-    y: CHUNK_SIZE.y * 2,
-};
-
+mod assets;
+mod camera;
 mod game;
-use game::GamePlugin;
-
 mod main_menu;
+mod prelude;
+
+use assets::AssetsPlugin;
+use camera::GameCameraPlugin;
+use game::GamePlugin;
 use main_menu::MainMenuPlugin;
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
@@ -32,136 +22,24 @@ pub enum AppState {
     Exit,
 }
 
-#[derive(AssetCollection, Resource)]
-pub struct MyAssets {
-    #[asset(texture_atlas(tile_size_x = 64., tile_size_y = 64., columns = 16, rows = 6))]
-    #[asset(path = "Tilesheets/tilesheet1.png")]
-    pub tilesheet1: Handle<TextureAtlas>,
-}
-
-pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<PrimaryWindow>>) {
-    let window = window_query.get_single().unwrap();
-
-    commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.1),
-        ..default()
-    });
-}
-
-struct MyTilemapPlugin;
-
-impl Plugin for MyTilemapPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(TilemapRenderSettings {
-            render_chunk_size: RENDER_CHUNK_SIZE,
-            ..Default::default()
-        })
-        .add_plugins(TilemapPlugin);
-        // .add_systems(OnEnter(AppState::Setup), setup_tilemap);
-    }
-}
-
-fn spawn_chunk(commands: &mut Commands, asset_server: &AssetServer, chunk_pos: IVec2) {
-    let tilemap_entity = commands.spawn_empty().id();
-    let mut tile_storage = TileStorage::empty(CHUNK_SIZE.into());
-    // Spawn the elements of the tilemap.
-    for x in 0..CHUNK_SIZE.x {
-        for y in 0..CHUNK_SIZE.y {
-            let tile_pos = TilePos { x, y };
-            let tile_entity = commands
-                .spawn(TileBundle {
-                    position: tile_pos,
-                    tilemap_id: TilemapId(tilemap_entity),
-                    ..Default::default()
-                })
-                .id();
-            commands.entity(tilemap_entity).add_child(tile_entity);
-            tile_storage.set(&tile_pos, tile_entity);
-        }
-    }
-
-    let transform = Transform::from_translation(Vec3::new(
-        chunk_pos.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
-        chunk_pos.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
-        0.0,
-    ));
-    let texture_handle: Handle<Image> = asset_server.load("tiles.png");
-    commands.entity(tilemap_entity).insert(TilemapBundle {
-        grid_size: TILE_SIZE.into(),
-        size: CHUNK_SIZE.into(),
-        storage: tile_storage,
-        texture: TilemapTexture::Single(texture_handle),
-        tile_size: TILE_SIZE,
-        transform,
-        ..Default::default()
-    });
-}
-
-fn camera_pos_to_chunk_pos(camera_pos: &Vec2) -> IVec2 {
-    let camera_pos = camera_pos.as_ivec2();
-    let chunk_size: IVec2 = IVec2::new(CHUNK_SIZE.x as i32, CHUNK_SIZE.y as i32);
-    let tile_size: IVec2 = IVec2::new(TILE_SIZE.x as i32, TILE_SIZE.y as i32);
-    camera_pos / (chunk_size * tile_size)
-}
-
-fn spawn_chunks_around_camera(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    camera_query: Query<&Transform, With<Camera>>,
-    mut chunk_manager: ResMut<ChunkManager>,
-) {
-    for transform in camera_query.iter() {
-        let camera_chunk_pos = camera_pos_to_chunk_pos(&transform.translation.xy());
-        for y in (camera_chunk_pos.y - 2)..(camera_chunk_pos.y + 2) {
-            for x in (camera_chunk_pos.x - 2)..(camera_chunk_pos.x + 2) {
-                if !chunk_manager.spawned_chunks.contains(&IVec2::new(x, y)) {
-                    chunk_manager.spawned_chunks.insert(IVec2::new(x, y));
-                    spawn_chunk(&mut commands, &asset_server, IVec2::new(x, y));
-                }
-            }
-        }
-    }
-}
-
-fn despawn_outofrange_chunks(
-    mut commands: Commands,
-    camera_query: Query<&Transform, With<Camera>>,
-    chunks_query: Query<(Entity, &Transform)>,
-    mut chunk_manager: ResMut<ChunkManager>,
-) {
-    for camera_transform in camera_query.iter() {
-        for (entity, chunk_transform) in chunks_query.iter() {
-            let chunk_pos = chunk_transform.translation.xy();
-            let distance = camera_transform.translation.xy().distance(chunk_pos);
-            if distance > 320.0 {
-                let x = (chunk_pos.x / (CHUNK_SIZE.x as f32 * TILE_SIZE.x)).floor() as i32;
-                let y = (chunk_pos.y / (CHUNK_SIZE.y as f32 * TILE_SIZE.y)).floor() as i32;
-                chunk_manager.spawned_chunks.remove(&IVec2::new(x, y));
-                commands.entity(entity).despawn_recursive();
-            }
-        }
-    }
-}
-
-#[derive(Default, Debug, Resource)]
-pub struct ChunkManager {
-    pub spawned_chunks: HashSet<IVec2>,
-}
-
 fn main() {
     App::new()
+        .add_state::<AppState>()
         .add_plugins((
-            DefaultPlugins,
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: String::from("Shipwreckers"),
+                        ..Default::default()
+                    }),
+                    ..default()
+                })
+                .set(ImagePlugin::default_nearest()),
             MainMenuPlugin,
             GamePlugin,
-            MyTilemapPlugin,
             EditorPlugin::default(),
+            GameCameraPlugin,
+            AssetsPlugin,
         ))
-        .add_state::<AppState>()
-        .add_loading_state(
-            LoadingState::new(AppState::AssetLoading).continue_to_state(AppState::Setup),
-        )
-        .add_collection_to_loading_state::<_, MyAssets>(AppState::AssetLoading)
-        .add_systems(OnEnter(AppState::Game), spawn_camera)
         .run();
 }

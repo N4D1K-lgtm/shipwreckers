@@ -1,14 +1,12 @@
+use crate::prelude::*;
 use bevy::prelude::*;
 
-mod enemy;
-mod player;
-mod systems;
-mod world;
+pub mod entities;
+pub mod systems;
+pub mod tilemap;
 
-use enemy::EnemyPlugin;
-use player::PlayerPlugin;
 use systems::*;
-use world::WorldPlugin;
+use tilemap::{MyTilemapPlugin, WorldPlugin};
 
 use super::AppState;
 
@@ -23,7 +21,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((PlayerPlugin, EnemyPlugin, WorldPlugin))
+        app.add_plugins((PlayerPlugin, EnemyPlugin, WorldPlugin, MyTilemapPlugin))
             .add_state::<SimulationState>()
             .add_systems(Update, toggle_simulaltion.run_if(in_state(AppState::Game)));
     }
