@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bevy_asset_loader = { version = "0.17.0", features = ["2d"] }
 bevy = "0.11.3"
 rand = "0.8.5"
 voronoice = "0.2.0"
@@ -13,7 +14,6 @@ noise = "0.8.0"
 bevy-inspector-egui = "0.20.0"
 bevy_editor_pls = "0.5.0"
 bevy_ecs_tilemap = "0.11.1"
-bevy_asset_loader = "0.17.0"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
