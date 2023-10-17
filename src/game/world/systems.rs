@@ -1,14 +1,14 @@
 use super::components::Coordinates;
 use super::components::{TileChunkComponent, TileComponent, TileType};
 use super::resources::{NoiseResource, TilemapResource};
-use super::WorldState;
+use crate::AppState;
 
 use bevy::log;
 use bevy::prelude::*;
 
 pub fn create_tilemap_chunks(
     mut commands: Commands,
-    mut next_state: ResMut<NextState<WorldState>>,
+    mut next_state: ResMut<NextState<AppState>>,
     tilemap: Res<TilemapResource>,
     noise: Res<NoiseResource>,
 ) {
@@ -48,7 +48,7 @@ pub fn create_tilemap_chunks(
             });
         }
     }
-    next_state.set(WorldState::Simulation);
+    next_state.set(AppState::Game);
     log::info!("Finished creating tilemap chunks");
 }
 
