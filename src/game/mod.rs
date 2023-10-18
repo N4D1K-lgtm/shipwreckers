@@ -23,6 +23,6 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((PlayerPlugin, EnemyPlugin, WorldPlugin, MyTilemapPlugin))
             .add_state::<SimulationState>()
-            .add_systems(Update, toggle_simulaltion.run_if(in_state(AppState::Game)));
+            .add_systems(Update, toggle_simulation.run_if(in_state(AppState::Game)));
     }
 }

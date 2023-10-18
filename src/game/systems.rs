@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use super::SimulationState;
 
-pub fn toggle_simulaltion(
+pub fn toggle_simulation(
     mut next_simulation_state: ResMut<NextState<SimulationState>>,
     simulation_state: Res<State<SimulationState>>,
     keyboard_input: Res<Input<KeyCode>>,
