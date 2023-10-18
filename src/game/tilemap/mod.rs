@@ -1,13 +1,13 @@
 use bevy::log;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use bevy_ecs_tilemap::TilemapPlugin as BevyTilemapPlugin;
 
 pub mod components;
 pub mod constants;
 pub mod resources;
 pub mod systems;
 
-use constants::*;
 use resources::{ChunkManager, NoiseResource, TilemapResource};
 use systems::*;
 
@@ -34,15 +34,15 @@ impl Plugin for WorldPlugin {
     }
 }
 
-pub struct MyTilemapPlugin;
+pub struct TilemapPlugin;
 
-impl Plugin for MyTilemapPlugin {
+impl Plugin for TilemapPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(TilemapRenderSettings {
-            render_chunk_size: RENDER_CHUNK_SIZE,
+            render_chunk_size: UVec2 { x: 16, y: 16 },
             ..Default::default()
         })
-        .add_plugins(TilemapPlugin)
+        .add_plugins(BevyTilemapPlugin)
         .insert_resource(ChunkManager::default())
         .add_systems(
             Update,

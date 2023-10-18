@@ -1,14 +1,19 @@
 use bevy::prelude::*;
-use bevy_editor_pls::prelude::*;
+use bevy_editor_pls::prelude::EditorPlugin as BevyEditorPlugin;
 
 mod assets;
 mod camera;
+mod config;
+mod editor;
 mod game;
 mod main_menu;
+
 mod prelude;
 
 use assets::AssetsPlugin;
 use camera::GameCameraPlugin;
+use config::ConfigPlugin;
+use editor::EditorPlugin;
 use game::GamePlugin;
 use main_menu::MainMenuPlugin;
 
@@ -25,6 +30,7 @@ pub enum AppState {
 fn main() {
     App::new()
         .add_state::<AppState>()
+        // plugins from bevy or external crates
         .add_plugins((
             DefaultPlugins
                 .set(WindowPlugin {
@@ -35,11 +41,15 @@ fn main() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-            MainMenuPlugin,
-            GamePlugin,
-            EditorPlugin::default(),
+            BevyEditorPlugin::default(),
+        ))
+        .add_plugins((
+            EditorPlugin,
             GameCameraPlugin,
             AssetsPlugin,
+            GamePlugin,
+            MainMenuPlugin,
+            ConfigPlugin,
         ))
         .run();
 }

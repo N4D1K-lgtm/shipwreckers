@@ -6,7 +6,7 @@ pub mod systems;
 pub mod tilemap;
 
 use systems::*;
-use tilemap::{MyTilemapPlugin, WorldPlugin};
+use tilemap::{TilemapPlugin, WorldPlugin};
 
 use super::AppState;
 
@@ -21,7 +21,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((PlayerPlugin, EnemyPlugin, WorldPlugin, MyTilemapPlugin))
+        app.add_plugins((PlayerPlugin, EnemyPlugin, WorldPlugin, TilemapPlugin))
             .add_state::<SimulationState>()
             .add_systems(Update, toggle_simulation.run_if(in_state(AppState::Game)));
     }
