@@ -43,6 +43,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
             BevyEditorPlugin::default(),
         ))
+        //My game specific plugins
         .add_plugins((
             EditorPlugin,
             GameCameraPlugin,
