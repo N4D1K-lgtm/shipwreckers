@@ -35,7 +35,7 @@ fn main() {
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: String::from("Shipwreckers"),
+                        title: "Shipwreckers".to_owned(),
                         ..Default::default()
                     }),
                     ..default()

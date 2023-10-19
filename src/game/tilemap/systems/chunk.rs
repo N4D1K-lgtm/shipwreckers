@@ -7,7 +7,7 @@ use super::super::resources::ChunkManager;
 use crate::assets::MyAssets;
 use crate::camera::MainGameCamera;
 
-use crate::config::{ChunkConfig, NoiseConfig, TileConfig};
+use crate::config::{ChunkConfig, TileConfig};
 
 pub fn spawn_chunk(
     commands: &mut Commands,
@@ -59,6 +59,7 @@ pub fn spawn_chunk(
             ..Default::default()
         },
         ChunkMarker {},
+        Name::new("Chunk"),
     ));
 }
 
@@ -84,7 +85,7 @@ pub fn spawn_chunks_around_camera(
     tile_config: Res<TileConfig>,
 ) {
     for transform in camera_query.iter() {
-        let camera_chunk_pos = camera_pos_to_chunk_pos(&transform.translation.xy(), &*tile_config);
+        let camera_chunk_pos = camera_pos_to_chunk_pos(&transform.translation.xy(), &tile_config);
         for y in (camera_chunk_pos.y - 2)..(camera_chunk_pos.y + 2) {
             for x in (camera_chunk_pos.x - 2)..(camera_chunk_pos.x + 2) {
                 if !chunk_manager.spawned_chunks.contains(&IVec2::new(x, y)) {
@@ -94,7 +95,7 @@ pub fn spawn_chunks_around_camera(
                         &my_assets,
                         &texture_atlases,
                         IVec2::new(x, y),
-                        &*tile_config,
+                        &tile_config,
                     );
                 }
             }
@@ -115,7 +116,7 @@ pub fn despawn_outofrange_chunks(
     let tile_size = tile_config.tile_size;
     for camera_transform in camera_query.iter() {
         let camera_chunk_pos =
-            camera_pos_to_chunk_pos(&camera_transform.translation.xy(), &*tile_config);
+            camera_pos_to_chunk_pos(&camera_transform.translation.xy(), &tile_config);
 
         // Define bounds based on DESPAWN_DISTANCE and camera_chunk_pos
         let despawn_bounds = (

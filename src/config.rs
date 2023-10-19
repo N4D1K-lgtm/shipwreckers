@@ -1,17 +1,38 @@
+use crate::prelude::{NoiseGeneratorType, WorleyWrapper};
+use bevy::log::info;
 use bevy::math::UVec2;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_inspector_egui::prelude::*;
-// random
-use crate::prelude::{NoiseGeneratorType, WorleyWrapper};
-
 pub struct ConfigPlugin;
 
 impl Plugin for ConfigPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(TileConfig::default())
             .insert_resource(NoiseConfig::default())
-            .insert_resource(ChunkConfig::default());
+            .insert_resource(ChunkConfig::default())
+            .register_type::<TileConfig>()
+            .register_type::<NoiseConfig>()
+            .register_type::<ChunkConfig>()
+            .add_systems(Update, resource_change_detection);
+    }
+}
+
+fn resource_change_detection(
+    noise: Res<NoiseConfig>,
+    tile: Res<TileConfig>,
+    chunk: Res<ChunkConfig>,
+) {
+    if noise.is_changed() {
+        info!("NoiseConfig changed!");
+    }
+
+    if tile.is_changed() {
+        info!("TileConfig changed!");
+    }
+
+    if chunk.is_changed() {
+        info!("ChunkConfig changed!");
     }
 }
 

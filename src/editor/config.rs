@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_ecs_tilemap::prelude::TilemapTileSize;
 use bevy_editor_pls::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_editor_pls::egui;
 use bevy_inspector_egui::bevy_inspector;
@@ -12,6 +13,8 @@ pub struct WindowState {
     old_seed: u32,
     frequency: f32,
     noise_texture: Option<egui::TextureHandle>,
+    tile_size: TilemapTileSize,
+    render_chunk_size: UVec2,
 }
 
 impl Default for WindowState {
@@ -20,6 +23,8 @@ impl Default for WindowState {
             old_seed: 0,
             frequency: 0.0,
             noise_texture: None,
+            tile_size: TilemapTileSize { x: 64.0, y: 64.0 },
+            render_chunk_size: UVec2 { x: 16, y: 16 },
         }
     }
 }
@@ -29,26 +34,26 @@ impl EditorWindow for ConfigEditorWindow {
     const NAME: &'static str = "Game Configuration";
 
     fn ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
-        let tile_config = world.get_resource::<TileConfig>().unwrap();
-
         world.resource_scope(|world, mut tile_config: Mut<TileConfig>| {
-            let ctx = ui.ctx().clone();
+            // let ctx = ui.ctx().clone();
             let Some(state) = cx.state_mut::<ConfigEditorWindow>() else {
                 return;
             };
             // UI logic for tile_config
             ui.group(|ui| {
                 ui.label("Tile Configuration");
-                ui.horizontal(|ui| {
+                ui.vertical(|ui| {
                     ui.label("Tile Size:");
-                    // ui.drag_value(&mut tile_config.tile_size.y);
+                    if bevy_inspector::ui_for_value(&mut state.tile_size, ui, world) {
+                        tile_config.tile_size = state.tile_size;
+                    }
                 });
                 // ... Add other tile configurations here
             });
         });
 
         world.resource_scope(|world, mut noise_config: Mut<NoiseConfig>| {
-            let ctx = ui.ctx().clone();
+            // let ctx = ui.ctx().clone();
             let Some(state) = cx.state_mut::<ConfigEditorWindow>() else {
                 return;
             };
