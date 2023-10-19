@@ -20,7 +20,7 @@ pub struct WorleyWrapper {
 
 // Use the wrappers in your enum
 #[allow(dead_code)]
-#[derive(Reflect)]
+#[derive(Reflect, Clone)]
 pub enum NoiseGeneratorType {
     Perlin(PerlinWrapper),
     Worley(WorleyWrapper),

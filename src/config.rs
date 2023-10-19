@@ -4,6 +4,7 @@ use bevy::math::UVec2;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_inspector_egui::prelude::*;
+
 pub struct ConfigPlugin;
 
 impl Plugin for ConfigPlugin {

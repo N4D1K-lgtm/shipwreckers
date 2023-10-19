@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use bevy_ecs_tilemap::prelude::TilemapTileSize;
 use bevy_editor_pls::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_editor_pls::egui;
 use bevy_inspector_egui::bevy_inspector;
+use std::collections::HashMap;
 
 use crate::config::{NoiseConfig, TileConfig};
 use crate::prelude::NoiseGeneratorType;
@@ -10,21 +10,29 @@ use crate::prelude::NoiseGeneratorType;
 pub struct ConfigEditorWindow;
 
 pub struct WindowState {
-    old_seed: u32,
-    frequency: f32,
+    states: HashMap<String, Box<dyn bevy::reflect::Reflect>>,
     noise_texture: Option<egui::TextureHandle>,
-    tile_size: TilemapTileSize,
-    render_chunk_size: UVec2,
 }
 
 impl Default for WindowState {
     fn default() -> Self {
+        let mut states = HashMap::new();
+
+        states.insert(
+            "NoiseConfig".to_string(),
+            Box::<NoiseConfig>::default() as Box<dyn Reflect>,
+        );
+
+        states.insert(
+            "TileConfig".to_string(),
+            Box::<TileConfig>::default() as Box<dyn Reflect>,
+        );
+
+        // ... add other configs as needed ...
+
         Self {
-            old_seed: 0,
-            frequency: 0.0,
+            states,
             noise_texture: None,
-            tile_size: TilemapTileSize { x: 64.0, y: 64.0 },
-            render_chunk_size: UVec2 { x: 16, y: 16 },
         }
     }
 }
@@ -34,49 +42,49 @@ impl EditorWindow for ConfigEditorWindow {
     const NAME: &'static str = "Game Configuration";
 
     fn ui(world: &mut World, mut cx: EditorWindowContext, ui: &mut egui::Ui) {
-        world.resource_scope(|world, mut tile_config: Mut<TileConfig>| {
-            // let ctx = ui.ctx().clone();
-            let Some(state) = cx.state_mut::<ConfigEditorWindow>() else {
-                return;
-            };
-            // UI logic for tile_config
-            ui.group(|ui| {
-                ui.label("Tile Configuration");
-                ui.vertical(|ui| {
-                    ui.label("Tile Size:");
-                    if bevy_inspector::ui_for_value(&mut state.tile_size, ui, world) {
-                        tile_config.tile_size = state.tile_size;
+        let Some(state) = cx.state_mut::<ConfigEditorWindow>() else {
+            return;
+        };
+
+        // Tile Configuration UI
+        ui.collapsing("Tile Configuration", |ui| {
+            if let Some(tile_config_state) = state.states.get_mut("TileConfig") {
+                if let Some(tile_config) = tile_config_state.downcast_mut::<TileConfig>() {
+                    ui.vertical(|ui| {
+                        ui.label("Tile Size:");
+                        bevy_inspector::ui_for_value(&mut tile_config.tile_size, ui, world);
+                    });
+                    if ui.button("Submit Tile Config").clicked() {
+                        world.resource_scope(|_world, mut tile_config_res: Mut<TileConfig>| {
+                            tile_config_res.tile_size = tile_config.tile_size;
+                        });
                     }
-                });
-                // ... Add other tile configurations here
-            });
+                }
+            }
         });
 
-        world.resource_scope(|world, mut noise_config: Mut<NoiseConfig>| {
-            // let ctx = ui.ctx().clone();
-            let Some(state) = cx.state_mut::<ConfigEditorWindow>() else {
-                return;
-            };
-
-            // UI logic for noise_config
-            ui.group(|ui| {
-                ui.indent("Noise Config", |ui| {
-                    ui.horizontal(|ui| {
+        // Noise Configuration UI
+        ui.collapsing("Noise Configuration", |ui| {
+            if let Some(noise_config_state) = state.states.get_mut("NoiseConfig") {
+                if let Some(noise_config) = noise_config_state.downcast_mut::<NoiseConfig>() {
+                    ui.vertical(|ui| {
                         ui.label("Seed:");
-                        if bevy_inspector::ui_for_value(&mut state.old_seed, ui, world) {
-                            match &mut noise_config.generator_type {
-                                NoiseGeneratorType::Perlin(perlin_wrapper) => {
-                                    perlin_wrapper.seed = state.old_seed;
-                                }
-                                NoiseGeneratorType::Worley(worley_wrapper) => {
-                                    worley_wrapper.seed = state.old_seed;
-                                }
+                        match &mut noise_config.generator_type {
+                            NoiseGeneratorType::Perlin(perlin_wrapper) => {
+                                bevy_inspector::ui_for_value(&mut perlin_wrapper.seed, ui, world);
+                            }
+                            NoiseGeneratorType::Worley(worley_wrapper) => {
+                                bevy_inspector::ui_for_value(&mut worley_wrapper.seed, ui, world);
                             }
                         }
                     });
-                })
-                // ... Add other noise configurations here
-            });
+                    if ui.button("Submit Noise Config").clicked() {
+                        world.resource_scope(|_world, mut noise_config_res: Mut<NoiseConfig>| {
+                            noise_config_res.generator_type = noise_config.generator_type.clone();
+                        });
+                    }
+                }
+            }
         });
     }
 }
