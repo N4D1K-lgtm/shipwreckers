@@ -7,7 +7,7 @@ use super::super::resources::ChunkManager;
 use crate::assets::MyAssets;
 use crate::camera::MainGameCamera;
 
-use crate::config::{ChunkConfig, TileConfig};
+use crate::config::{chunk::ChunkConfig, tilemap::TileConfig};
 
 pub fn spawn_chunk(
     commands: &mut Commands,

@@ -1,6 +1,7 @@
-use bevy::prelude::Resource;
+use bevy::prelude::*;
 
-#[derive(Resource, Debug)]
+#[derive(Resource, Debug, Reflect)]
+#[reflect(Resource)]
 pub struct TilemapResource {
     pub width: usize,
     pub height: usize,

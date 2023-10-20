@@ -28,6 +28,7 @@ impl Plugin for WorldPlugin {
         app.init_resource::<TilemapResource>()
             .init_resource::<NoiseResource>()
             // .add_state::<WorldState>()
+            .register_type::<TilemapResource>()
             .add_systems(OnEnter(AppState::Setup), create_tilemap_chunks)
             .add_systems(OnExit(AppState::Setup), log_tilemap_info);
         log::info!("Loaded World Plugin");
@@ -46,11 +47,13 @@ impl Plugin for TilemapPlugin {
         .insert_resource(ChunkManager::default())
         .add_systems(
             Update,
-            (
-                spawn_chunks_around_camera,
-                despawn_outofrange_chunks.after(spawn_chunks_around_camera),
-            )
-                .run_if(in_state(AppState::Game)),
+            (spawn_chunks_around_camera, ping_if_resource_changed).run_if(in_state(AppState::Game)),
         );
+    }
+}
+
+fn ping_if_resource_changed(tilemap: Res<TilemapResource>) {
+    if tilemap.is_changed() {
+        println!("Tilemap was changed");
     }
 }
