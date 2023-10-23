@@ -1,9 +1,9 @@
-use bevy::prelude::*;
-use bevy_editor_pls::prelude::EditorPlugin as BevyEditorPlugin;
+use std::time::Duration;
 
+use bevy::{asset::ChangeWatcher, diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
+use bevy_editor_pls::prelude::EditorPlugin as BevyEditorPlugin;
 mod assets;
 mod camera;
-mod config;
 mod editor;
 mod game;
 mod main_menu;
@@ -12,10 +12,12 @@ mod prelude;
 
 use assets::AssetsPlugin;
 use camera::GameCameraPlugin;
-use config::ConfigPlugin;
 use editor::EditorPlugin;
 use game::GamePlugin;
 use main_menu::MainMenuPlugin;
+
+#[reflect_trait]
+pub trait ConfigResource {}
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum AppState {
@@ -26,7 +28,6 @@ pub enum AppState {
     Game,
     Exit,
 }
-
 fn main() {
     App::new()
         .add_state::<AppState>()
@@ -40,8 +41,13 @@ fn main() {
                     }),
                     ..default()
                 })
-                .set(ImagePlugin::default_nearest()),
+                .set(ImagePlugin::default_nearest())
+                .set(AssetPlugin {
+                    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
+                    ..default()
+                }),
             BevyEditorPlugin::default(),
+            FrameTimeDiagnosticsPlugin,
         ))
         //My game specific plugins
         .add_plugins((
@@ -50,7 +56,6 @@ fn main() {
             AssetsPlugin,
             GamePlugin,
             MainMenuPlugin,
-            ConfigPlugin,
         ))
         .run();
 }

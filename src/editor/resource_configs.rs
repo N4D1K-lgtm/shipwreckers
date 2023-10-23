@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::config::ReflectConfigResource;
+use crate::ReflectConfigResource;
 
 use bevy_editor_pls::editor_window::{EditorWindow, EditorWindowContext};
 use bevy_inspector_egui::bevy_inspector::by_type_id;
@@ -10,7 +10,7 @@ pub struct ResourcesConfigWindow;
 
 impl EditorWindow for ResourcesConfigWindow {
     type State = ();
-
+    // this is my change
     const NAME: &'static str = "Game Config Resources";
 
     fn ui(world: &mut World, _cx: EditorWindowContext, ui: &mut egui::Ui) {

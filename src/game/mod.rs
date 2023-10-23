@@ -2,11 +2,12 @@ use crate::prelude::*;
 use bevy::prelude::*;
 
 pub mod entities;
+pub mod noise;
 pub mod systems;
 pub mod tilemap;
 
 use systems::*;
-use tilemap::{TilemapPlugin, WorldPlugin};
+use tilemap::TilemapPlugin;
 
 use super::AppState;
 
@@ -21,7 +22,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((PlayerPlugin, EnemyPlugin, WorldPlugin, TilemapPlugin))
+        app.add_plugins((PlayerPlugin, EnemyPlugin, TilemapPlugin))
             .add_state::<SimulationState>()
             .add_systems(Update, toggle_simulation.run_if(in_state(AppState::Game)));
     }
