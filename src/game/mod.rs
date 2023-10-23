@@ -6,6 +6,7 @@ pub mod noise;
 pub mod systems;
 pub mod tilemap;
 
+use noise::NoisePlugin;
 use systems::*;
 use tilemap::TilemapPlugin;
 
@@ -22,7 +23,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((PlayerPlugin, EnemyPlugin, TilemapPlugin))
+        app.add_plugins((PlayerPlugin, EnemyPlugin, TilemapPlugin, NoisePlugin))
             .add_state::<SimulationState>()
             .add_systems(Update, toggle_simulation.run_if(in_state(AppState::Game)));
     }
