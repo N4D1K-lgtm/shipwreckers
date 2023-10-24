@@ -1,0 +1,12 @@
+{
+  "name": "Vegetation",
+  "output": "scale",
+  "scale": {
+    "type": "Scale",
+    "data": [0.013, 1]
+  },
+  "worley_node": {
+    "type": "Worley",
+    "data": 42
+  }
+}

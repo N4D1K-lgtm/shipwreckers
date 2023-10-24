@@ -4,7 +4,7 @@ use bevy_asset_loader::prelude::*;
 use crate::AppState;
 
 mod asset_loader;
-mod noise_types;
+mod nodes;
 
 use asset_loader::{NoiseConfig, NoiseConfigAssetLoader};
 
