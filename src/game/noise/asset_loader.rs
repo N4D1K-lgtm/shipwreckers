@@ -5,7 +5,6 @@ use bevy::{
     utils::BoxedFuture,
 };
 
-use super::nodes::{NodeData, NodeType};
 use serde::{Deserialize, Serialize};
 use serde_json;
 #[derive(Debug, Deserialize, Serialize, TypeUuid, TypePath)]
@@ -13,8 +12,6 @@ use serde_json;
 pub struct NoiseConfig {
     #[serde(default)]
     name: String,
-    #[serde(flatten)]
-    nodes: NodeData,
 }
 
 #[derive(Default)]
@@ -30,6 +27,8 @@ impl AssetLoader for NoiseConfigAssetLoader {
             let config_asset: NoiseConfig = serde_json::de::from_slice(bytes)?;
 
             let serialized_asset = serde_json::to_string_pretty(&config_asset).unwrap();
+
+            // Print the serialized lines for comparison
 
             print!(
                 "Deserialized: \n{:#?}, Serialized: \n{}",
