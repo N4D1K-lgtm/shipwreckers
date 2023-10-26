@@ -1,292 +1,183 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-use std::any::Any;
+pub const DEFAULT_OCTAVES: usize = 6;
+pub const DEFAULT_FREQUENCY: f64 = 2.0;
+pub const DEFAULT_LACUNARITY: f64 = std::f64::consts::PI * 2.0 / 3.0;
+pub const DEFAULT_PERSISTENCE: f64 = 0.5;
 
-use libnoise::{
-    Abs, Add, Billow, Blend, Checkerboard, Clamp, Constant, Exp, Fbm, Generator, ImprovedPerlin,
-    Max, Min, Mul, Neg, Perlin, Pow, Power, Product, RidgedMulti, Scale, Select, Sum, Translate,
-    Value, Worley,
-};
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub enum ConstantOrValue<T: Default> {
+    Constant(String),
+    RawValue(T),
+}
 
-use assert_matches::assert_matches;
+impl<T: Default> Default for ConstantOrValue<T> {
+    fn default() -> Self {
+        ConstantOrValue::RawValue(Default::default())
+    }
+}
 
-#[derive(Debug)]
-pub enum NoiseError {
-    NodeNotFound,
-    InvalidParameters,
-    CircularReference,
-    // ... other error types
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct NoiseParameters {
+    octaves: ConstantOrValue<usize>,
+    frequency: ConstantOrValue<f64>,
+    lacunarity: ConstantOrValue<f64>,
+    persistence: ConstantOrValue<f64>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct OperationParameters {
+    value: ConstantOrValue<f64>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct VectorOperationParameters {
+    vector: ConstantOrValue<Vec<f64>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct BinaryOperationParameters {
+    a: String,
+    b: String,
+}
+
+impl Default for NoiseParameters {
+    fn default() -> Self {
+        Self {
+            octaves: ConstantOrValue::RawValue(DEFAULT_OCTAVES),
+            frequency: ConstantOrValue::RawValue(DEFAULT_FREQUENCY),
+            lacunarity: ConstantOrValue::RawValue(DEFAULT_LACUNARITY),
+            persistence: ConstantOrValue::RawValue(DEFAULT_PERSISTENCE),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum Node {
     // Sources
     Constant {
-        seed: f64,
+        constant: ConstantOrValue<f64>,
     },
+
     Value {
-        seed: u64,
+        seed: ConstantOrValue<u64>,
     },
+
     Perlin {
-        seed: u64,
+        seed: ConstantOrValue<u64>,
     },
+
     ImprovedPerlin {
-        seed: u64,
+        seed: ConstantOrValue<u64>,
     },
+
     Worley {
-        seed: u64,
+        seed: ConstantOrValue<u64>,
     },
-    Checkerboard {
-        seed: u64,
-    },
+
+    Checkerboard,
 
     // Complex Generators
     Fbm {
         input: String,
-        octaves: u32,
-        frequency: f64,
-        lacunarity: f64,
-        persistence: f64,
+        parameters: NoiseParameters,
     },
 
     Billow {
         input: String,
-        octaves: u32,
-        frequency: f64,
-        lacunarity: f64,
-        persistence: f64,
+        parameters: NoiseParameters,
     },
 
     RidgedMulti {
         input: String,
-        octaves: u32,
-        frequency: f64,
-        lacunarity: f64,
-        persistence: f64,
+        parameters: NoiseParameters,
     },
 
     // Adapters and Modifiers
     Abs {
         input: String,
     },
+
     Add {
         input: String,
-        value: f64,
+        value: ConstantOrValue<f64>,
     },
+
     Clamp {
         input: String,
-        min: f64,
-        max: f64,
+        min: ConstantOrValue<f64>,
+        max: ConstantOrValue<f64>,
     },
+
     Exp {
         input: String,
     },
+
     Mul {
         input: String,
-        value: f64,
+        value: ConstantOrValue<f64>,
     },
+
     Neg {
         input: String,
     },
+
     PowF64 {
         input: String,
-        exponent: f64,
+        exponent: ConstantOrValue<f64>,
     },
+
     PowI32 {
         input: String,
-        exponent: i32,
+        exponent: ConstantOrValue<i32>,
     },
+
     Scale {
         input: String,
-        scale: Vec<f64>,
+        scale: ConstantOrValue<Vec<f64>>,
     },
+
     Translate {
         input: String,
-        translation: Vec<f64>,
+        translation: ConstantOrValue<Vec<f64>>,
     },
+
     Max {
         a: String,
         b: String,
     },
+
     Min {
         a: String,
         b: String,
     },
+
     Power {
         base: String,
         exponent: String,
     },
+
     Product {
         a: String,
         b: String,
     },
+
     Sum {
         a: String,
         b: String,
     },
+
     Blend {
         a: String,
         b: String,
         control: String,
     },
+
     Select {
         a: String,
         b: String,
         control: String,
-        lower_bound: f64,
-        upper_bound: f64,
+        lower_bound: ConstantOrValue<f64>,
+        upper_bound: ConstantOrValue<f64>,
     },
-}
-
-impl Node {
-    pub fn generate(&self) -> Result<Box<dyn Any>, NoiseError> {
-        self.validate()?;
-        let mut node_with_defaults = self.clone(); // Make a clone to apply defaults
-        node_with_defaults.with_defaults();
-        node_with_defaults.to_generator()
-    }
-
-    pub fn to_generator(&self) -> Result<Box<dyn Any>, NoiseError> {
-        match self {
-            Node::Constant { seed } => Ok(Box::new(Constant::<2>::new(*seed))),
-            Node::Value { seed } => Ok(Box::new(Value::<2>::new(*seed))),
-            // ... and so on for other nodes.
-            _ => Err(NoiseError::InvalidParameters),
-        }
-    }
-
-    fn with_defaults(&mut self) {
-        // Changed to take a mutable reference
-        match self {
-            Node::Constant { seed } => {
-                if *seed == 0.0 {
-                    *seed = 1.0;
-                }
-            }
-            Node::Value { seed } => {
-                if *seed == 0 {
-                    *seed = 1;
-                }
-            }
-            // ... and so on for other nodes with their specific defaulting logic.
-            _ => {}
-        }
-    }
-    fn validate(&self) -> Result<(), NoiseError> {
-        match self {
-            Node::Constant { seed } => {
-                if *seed < 0.0 {
-                    return Err(NoiseError::InvalidParameters);
-                }
-            }
-            Node::Value { seed } => {
-                if *seed == 0 {
-                    return Err(NoiseError::InvalidParameters);
-                }
-            }
-            // ... and so on for other nodes with their specific validation logic.
-            _ => {}
-        }
-        Ok(())
-    }
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CustomNode {
-    pub name: String,
-    pub chain: Vec<NodeInstance>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub enum NodeValue {
-    ConstantName(String), // Reference to a constant defined in the config
-    RawValue(f64),        // Direct f64 value
-}
-
-#p[derive(Debug, Deserialize, Serialize)]
-pub struct NodeInput {
-    input: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct NodeInstance {
-    pub id: String, // Unique identifier for the instance
-    pub node_type: Node,
-    pub parameters: HashMap<String, NodeValue>, // Parameters and their values or references
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Edge {
-    pub from: String, // NodeInstance name
-    pub to: String,   // NodeInstance name
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Config {
-    pub constants: HashMap<String, f64>,
-    pub nodes: Vec<CustomNode>,
-    pub instances: HashMap<String, NodeInstance>,
-    pub edges: Vec<Edge>,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_generate_constant() {
-        let node = Node::Constant { seed: 5.0 };
-        match node.generate() {
-            Ok(_generator) => {
-                // Here, you can further test the generator if you can cast it or use it in some way.
-            }
-            Err(e) => panic!("Failed to generate with error: {:?}", e),
-        }
-    }
-
-    #[test]
-    fn test_generate_value() {
-        let node = Node::Value { seed: 2 };
-        match node.generate() {
-            Ok(_generator) => {
-                // Here, you can further test the generator if you can cast it or use it in some way.
-            }
-            Err(e) => panic!("Failed to generate with error: {:?}", e),
-        }
-    }
-
-    #[test]
-    fn test_validate_invalid_constant() {
-        let node = Node::Constant { seed: -1.0 };
-        assert_matches!(node.validate(), Err(NoiseError::InvalidParameters));
-    }
-
-    #[test]
-    fn test_validate_invalid_value() {
-        let node = Node::Value { seed: 0 };
-        assert_matches!(node.validate(), Err(NoiseError::InvalidParameters));
-    }
-
-    #[test]
-    fn test_with_defaults_constant() {
-        let mut node = Node::Constant { seed: 0.0 };
-        node.with_defaults();
-        if let Node::Constant { seed } = &node {
-            assert_eq!(*seed, 1.0);
-        } else {
-            panic!("Expected a Node::Constant after calling with_defaults");
-        }
-    }
-
-    #[test]
-    fn test_with_defaults_value() {
-        let mut node = Node::Value { seed: 0 };
-        node.with_defaults();
-        if let Node::Value { seed } = &node {
-            assert_eq!(*seed, 1);
-        } else {
-            panic!("Expected a Node::Value after calling with_defaults");
-        }
-    }
 }
