@@ -26,6 +26,7 @@ libnoise = "0.1.0"
 serde_json = "1.0.107"
 assert_matches = "1.4.0"
 anyhow = "1.0.75"
+thiserror = "1.0.50"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

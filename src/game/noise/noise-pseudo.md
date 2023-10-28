@@ -1,78 +1,95 @@
-# JSON Representation
+# Example Noise Asset
 
-```json
+````json
 {
-  "name": "DetailedMapNoise",
+  "name": "TerrainNoiseMap",
   "constants": {
-    "land_frequency": 0.04,
-    "base_seed": 1234,
-    "ridge_multiplier": 1.5
+    "MAIN_FREQUENCY": {
+      "float": 2.5
+    },
+    "MAIN_OCTAVES": {
+      "usize": 5
+    },
+    "SCALE_FACTOR": {
+      "float": 3.0
+    },
+    "TERRAIN_SEED": {
+      "unsignedint": 1234567890
+    }
   },
   "node_templates": {
-    "land_template": {
-      "type": "perlin",
-      "parameters": {
-        "frequency": "land_frequency",
-        "seed": "base_seed"
+    "ForestLayer": {
+      "name": "ForestLayer",
+      "inputs": [
+        "base_noise"
+      ],
+      "output": "forest_ridged",
+      "nodes": {
+        "forest_ridged": {
+          "RidgedMulti": {
+            "input": "base_noise",
+            "octaves": {
+              "value": 6
+            },
+            "frequency": {
+              "value": 2.0
+            },
+            "lacunarity": {
+              "value": 2.0943951023931953
+            },
+            "persistence": {
+              "value": 0.5
+            }
+          }
+        }
       }
     },
-    "ridge_template": {
-      "type": "ridgedmulti",
-      "parameters": {
-        "multiplier": "ridge_multiplier",
-        "seed": "base_seed"
+    "MountainBase": {
+      "name": "MountainBase",
+      "inputs": [
+        "base_noise",
+        "mountain_exponent"
+      ],
+      "output": "mountain_power",
+      "nodes": {
+        "mountain_power": {
+          "Power": {
+            "base": "base_noise",
+            "exponent": "mountain_exponent"
+          }
+        }
       }
     }
   },
-  "output": "final_map"
+  "output": "final_terrain",
   "graph": {
-    "land1": {
-      "template": "land_template"
-    },
-    "ridge_instance": {
-      "template": "ridge_template"
-    },
-    "scaled_ridge": {
-      "type": "scale",
-      "parameters": {
-        "input": "ridge_instance",
-        "scale": 0.8
+    "mountain_layer": {
+      "template": "MountainBase",
+      "inputs": {
+        "base_noise": "base_noise"
       }
     },
-    "water": {
-      "type": "billow",
-      "parameters": {
-        "frequency": 0.02,
-        "seed": 5678
+    "base_noise": {
+      "ImprovedPerlin": {
+        "seed": {
+          "constant": "TERRAIN_SEED"
+        }
       }
     },
-    "combined_noise": {
-      "type": "add",
-      "parameters": {
-        "input1": "land1",
-        "input2": "scaled_ridge"
+    "forest_layer": {
+      "template": "ForestLayer",
+      "inputs": {
+        "base_noise": "base_noise",
+        "forest_layer": "forest_layer"
       }
     },
-    "final_map": {
-      "type": "blend",
-      "parameters": {
-        "input": "combined_noise",
-        "other": "water",
-        "control": "land1"
-      }
-    },
-    "clamped_map": {
-      "type": "clamp",
-      "parameters": {
-        "input": "final_map",
-        "lower_bound": 0.0,
-        "upper_bound": 1.0
+    "final_terrain": {
+      "Blend": {
+        "base": "mountain_layer",
+        "other": "forest_layer",
+        "control": "base_noise"
       }
     }
   }
-}
-```
-
-```
-
-```
+}```
+````

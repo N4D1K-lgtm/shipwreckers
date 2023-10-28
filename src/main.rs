@@ -45,6 +45,10 @@ fn main() {
                 .set(AssetPlugin {
                     watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
                     ..default()
+                })
+                .set(bevy::log::LogPlugin {
+                    level: bevy::log::Level::DEBUG,
+                    ..default()
                 }),
             BevyEditorPlugin::default(),
             FrameTimeDiagnosticsPlugin,
