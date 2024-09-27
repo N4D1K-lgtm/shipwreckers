@@ -1,7 +1,4 @@
-use super::components::Coordinates;
-use super::components::{TileChunkComponent, TileComponent, TileType};
-use super::resources::{NoiseResource, TilemapResource};
-use crate::AppState;
+use crate::prelude::*;
 
 use bevy::log;
 use bevy::prelude::*;

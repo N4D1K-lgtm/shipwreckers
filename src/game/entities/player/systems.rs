@@ -1,16 +1,18 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
-use super::components::*;
+use crate::prelude::*;
 
 pub const PLAYER_ROTATION_SPEED: f32 = 360.0; // Degrees per second
 pub const ACCELERATION: f32 = 300.0;
 pub const ROTATION_LERP_FACTOR: f32 = 0.1;
 
 pub fn spawn_player(
+    mut world: &World,
     mut commands: Commands,
     window_query: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
+    player_handle: Res<LocalPlayerHandle>,
 ) {
     let window = window_query.get_single().unwrap();
 
@@ -23,6 +25,7 @@ pub fn spawn_player(
         Player {
             velocity: Vec3::ZERO,
             rotation_speed: 0.0,
+            handle: player_handle.0,
         },
     ));
 }
